@@ -1,0 +1,4 @@
+crewai
+openai
+feedparser
+python-dotenv
