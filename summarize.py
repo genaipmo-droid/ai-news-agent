@@ -16,16 +16,17 @@ client = OpenAI(
 
 def is_india_ai_related(text):
     """
-    Strict classifier: headline MUST BE BOTH AI-related AND India-related.
+    Contextual classifier to determine if a headline is about
+    Artificial Intelligence developments related to India.
     """
 
     prompt = f"""
-You are a strict classifier for Artificial Intelligence news related to India.
+You are a strict news classifier.
 
-Your task is to determine whether the headline is about:
-Artificial Intelligence developments specifically connected to India.
+Determine whether the headline describes a development in
+Artificial Intelligence specifically related to India.
 
-Return ONLY:
+Return ONLY one word:
 
 YES
 or
@@ -33,35 +34,33 @@ NO
 
 Return YES only if BOTH conditions are true:
 
-1) The topic is about Artificial Intelligence, such as:
-- AI
-- artificial intelligence
-- machine learning
-- deep learning
-- generative AI
-- LLMs
-- AI research
-- AI startups
-- AI policy
-- AI infrastructure
-- AI models
-- AI tools
+1) The headline clearly relates to Artificial Intelligence such as:
+   - artificial intelligence
+   - machine learning
+   - deep learning
+   - generative AI
+   - LLMs
+   - AI research
+   - AI startups
+   - AI policy
+   - AI infrastructure
+   - AI models
+   - AI tools or platforms
 
 AND
 
-2) The news is specifically related to India, such as:
-- Indian companies
-- Indian startups
-- Indian government
-- Indian research labs
-- Indian AI ecosystem
-- Indian cities like Bengaluru, Delhi, Mumbai, Hyderabad, Chennai
-- AI investments or infrastructure in India
+2) The development is specifically connected to India such as:
+   - Indian companies
+   - Indian startups
+   - Indian government
+   - Indian research labs
+   - Indian AI ecosystem
+   - Indian cities like Bengaluru, Delhi, Mumbai, Hyderabad, Chennai
 
 Return NO if:
-- It is about airlines, aviation, politics, finance, social issues
-- It is global AI news not specifically about India
-- It is India news unrelated to AI
+- The headline is about airlines, aviation, politics, finance, etc.
+- The topic is global AI news not specifically related to India
+- The topic is India news but unrelated to AI
 
 Examples:
 
@@ -100,7 +99,7 @@ Answer:
 
 def summarize_article(text):
     """
-    Generate structured summary for the news headline.
+    Generate structured executive summary.
     """
 
     prompt = f"""
@@ -137,7 +136,7 @@ News:
 
     output = response.choices[0].message.content
 
-    # Make bullets render nicely in HTML emails
+    # Make bullets render properly in HTML email
     output = output.replace("•", "<br>• ")
 
     return output

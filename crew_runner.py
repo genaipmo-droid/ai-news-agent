@@ -1,9 +1,3 @@
-
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
 from tools import fetch_ai_news
 from summarize import summarize_article, is_india_ai_related
 from email_sender import send_email
@@ -16,32 +10,15 @@ def run_news_agent():
     report = ""
     count = 0
 
-    # Optional cheap keyword filter before LLM
-    ai_keywords = [
-        "ai",
-        "artificial intelligence",
-        "machine learning",
-        "generative ai",
-        "deep learning",
-        "llm",
-        "neural",
-        "nvidia",
-        "openai"
-    ]
-
     for art in articles:
 
         title = art["title"]
 
-        # Keyword filter to reduce noise
-        if not any(k in title.lower() for k in ai_keywords):
-            continue
-
-        # LLM judge for India + AI relevance
+        # Contextual AI + India relevance filter
         if not is_india_ai_related(title):
             continue
 
-        # Summarize the news
+        # Generate summary
         summary = summarize_article(title)
 
         # Format sections nicely for HTML email
@@ -57,12 +34,11 @@ def run_news_agent():
 
         count += 1
 
-        # Stop after top 5 news
         if count == 5:
             break
 
     if count == 0:
-        report = "No India-specific AI news found today."
+        report = "No AI developments related to India were found today."
 
     send_email(report)
 
