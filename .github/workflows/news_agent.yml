@@ -2,12 +2,11 @@ name: AI News Agent
 
 on:
   schedule:
-    - cron: "30 2 * * *"   # 8:00 AM IST
-  workflow_dispatch:
+    - cron: "30 2 * * *"   # Runs at 08:00 AM IST
+  workflow_dispatch:      # Allows manual run from GitHub UI
 
 jobs:
   run-agent:
-
     runs-on: ubuntu-latest
 
     steps:
