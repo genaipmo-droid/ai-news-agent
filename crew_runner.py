@@ -1,5 +1,5 @@
 from tools import fetch_ai_news
-from summarize import summarize_article, is_india_ai_related
+from summarize import summarize_article, is_india_ai_related, score_news_impact
 from email_sender import send_email
 
 
@@ -7,39 +7,51 @@ def run_news_agent():
 
     articles = fetch_ai_news()
 
-    report = ""
-    count = 0
+    scored_articles = []
 
+    # Step 1 — Filter and score
     for art in articles:
 
         title = art["title"]
 
-        # Contextual AI + India relevance filter
         if not is_india_ai_related(title):
             continue
 
-        # Generate summary
-        summary = summarize_article(title)
+        score = score_news_impact(title)
 
-        # Format sections nicely for HTML email
+        art["impact_score"] = score
+
+        scored_articles.append(art)
+
+    # Step 2 — Rank by importance
+    scored_articles = sorted(
+        scored_articles,
+        key=lambda x: x["impact_score"],
+        reverse=True
+    )
+
+    # Step 3 — Select top 5
+    top_articles = scored_articles[:5]
+
+    report = ""
+
+    for art in top_articles:
+
+        summary = summarize_article(art["title"])
+
         summary = summary.replace("Headline:", "<b>Headline:</b><br>")
         summary = summary.replace("Key Points:", "<br><b>Key Points:</b>")
         summary = summary.replace("Impact:", "<br><b>Impact:</b><br>")
 
         report += "<br>----------------------<br><br>"
-        report += f"<b>{art['date']}</b><br><br>"
+        report += f"<b>{art['date']}</b> | Impact Score: {art['impact_score']}<br><br>"
         report += summary
         report += f'<br><br>Source: <a href="{art["link"]}">{art["publisher"]}</a>'
         report += "<br><br>"
 
-        count += 1
-
-        if count == 5:
-            break
-
-    if count == 0:
+    if not report:
         report = "No AI developments related to India were found today."
 
     send_email(report)
 
-    print("Daily AI News Email Sent Successfully")
+    print("Top AI News Email Sent Successfully")

@@ -26,7 +26,7 @@ You are a strict news classifier.
 Determine whether the headline describes a development in
 Artificial Intelligence specifically related to India.
 
-Return ONLY one word:
+Return ONLY:
 
 YES
 or
@@ -34,50 +34,34 @@ NO
 
 Return YES only if BOTH conditions are true:
 
-1) The headline clearly relates to Artificial Intelligence such as:
-   - artificial intelligence
-   - machine learning
-   - deep learning
-   - generative AI
-   - LLMs
-   - AI research
-   - AI startups
-   - AI policy
-   - AI infrastructure
-   - AI models
-   - AI tools or platforms
+1) The topic clearly relates to Artificial Intelligence such as:
+- AI
+- artificial intelligence
+- machine learning
+- deep learning
+- generative AI
+- LLMs
+- AI research
+- AI startups
+- AI policy
+- AI infrastructure
+- AI models
+- AI tools
 
 AND
 
 2) The development is specifically connected to India such as:
-   - Indian companies
-   - Indian startups
-   - Indian government
-   - Indian research labs
-   - Indian AI ecosystem
-   - Indian cities like Bengaluru, Delhi, Mumbai, Hyderabad, Chennai
+- Indian companies
+- Indian startups
+- Indian government
+- Indian research labs
+- Indian AI ecosystem
+- Indian cities like Bengaluru, Delhi, Mumbai, Hyderabad, Chennai
 
 Return NO if:
 - The headline is about airlines, aviation, politics, finance, etc.
-- The topic is global AI news not specifically related to India
-- The topic is India news but unrelated to AI
-
-Examples:
-
-Headline: India launches national AI compute mission
-Answer: YES
-
-Headline: Nvidia expands AI research center in Bengaluru
-Answer: YES
-
-Headline: Indian startup builds generative AI platform
-Answer: YES
-
-Headline: OpenAI releases new GPT model
-Answer: NO
-
-Headline: Air India increases number of women pilots
-Answer: NO
+- The topic is global AI news not specifically about India
+- The topic is India news unrelated to AI
 
 Headline:
 {text}
@@ -94,6 +78,47 @@ Answer:
     answer = response.choices[0].message.content.strip().upper()
 
     return answer == "YES"
+
+
+
+def score_news_impact(text):
+    """
+    Score the importance of an AI news development related to India.
+    """
+
+    prompt = f"""
+You are evaluating the importance of an AI development related to India.
+
+Score the impact from 1 to 10.
+
+Score guide:
+
+10 = Major national AI policy, infrastructure, or breakthrough
+8-9 = Large investments, major AI company expansion, major research
+6-7 = Significant AI startup launches or partnerships
+4-5 = Moderate AI developments
+1-3 = Minor updates
+
+Return ONLY a number between 1 and 10.
+
+Headline:
+{text}
+
+Score:
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role":"user","content":prompt}],
+        temperature=0
+    )
+
+    score = response.choices[0].message.content.strip()
+
+    try:
+        return int(score)
+    except:
+        return 1
 
 
 
@@ -130,13 +155,13 @@ News:
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
+        messages=[{"role":"user","content":prompt}],
         temperature=0.2
     )
 
     output = response.choices[0].message.content
 
-    # Make bullets render properly in HTML email
+    # Make bullets display correctly in HTML email
     output = output.replace("•", "<br>• ")
 
     return output
