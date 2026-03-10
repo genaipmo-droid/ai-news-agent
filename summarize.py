@@ -15,57 +15,39 @@ client = OpenAI(
 )
 
 
-def is_india_ai_related(text):
+def classify_india_ai_batch(headlines):
     """
-    Contextual classifier to determine if headline is AI-related AND India-related.
+    Classify multiple headlines in one LLM call.
+    Returns a list of indices for relevant headlines.
     """
+
+    numbered_headlines = "\n".join(
+        [f"{i+1}. {h}" for i, h in enumerate(headlines)]
+    )
 
     prompt = f"""
 You are a strict news classifier.
 
-Determine whether the headline describes a development in
-Artificial Intelligence specifically related to India.
+From the list below, identify headlines describing
+Artificial Intelligence developments specifically related to India.
 
-Return ONLY:
+Return ONLY the numbers of relevant headlines separated by commas.
 
-YES
-or
-NO
+Example output:
+1,3,5
 
-Return YES only if BOTH conditions are true:
+Rules:
 
-1) The topic clearly relates to Artificial Intelligence such as:
-- artificial intelligence
-- machine learning
-- deep learning
-- generative AI
-- LLMs
-- AI research
-- AI startups
-- AI policy
-- AI infrastructure
-- AI models
-- AI tools
+Relevant headlines must:
+1) Be about AI / machine learning / generative AI / LLMs
+2) Be specifically related to India (Indian companies, startups,
+government, research labs, or cities like Bengaluru, Delhi, etc.)
 
-AND
+Headlines:
 
-2) The development is specifically connected to India such as:
-- Indian companies
-- Indian startups
-- Indian government
-- Indian research labs
-- Indian AI ecosystem
-- Indian cities like Bengaluru, Delhi, Mumbai, Hyderabad, Chennai
+{numbered_headlines}
 
-Return NO if:
-- The headline is about airlines, aviation, politics, finance, etc.
-- The topic is global AI news not specifically about India
-- The topic is India news unrelated to AI
-
-Headline:
-{text}
-
-Answer:
+Relevant headline numbers:
 """
 
     response = client.chat.completions.create(
@@ -74,12 +56,15 @@ Answer:
         temperature=0
     )
 
-    log_usage(response.usage, "AI + India Classifier")
+    log_usage(response.usage)
 
-    answer = response.choices[0].message.content.strip().upper()
+    answer = response.choices[0].message.content.strip()
 
-    return answer == "YES"
-
+    try:
+        indices = [int(x.strip()) - 1 for x in answer.split(",")]
+        return indices
+    except:
+        return []
 
 
 def score_news_impact(text):

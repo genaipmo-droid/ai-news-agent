@@ -1,5 +1,9 @@
 from tools import fetch_ai_news
-from summarize import summarize_article, is_india_ai_related, score_news_impact
+from summarize import (
+    classify_india_ai_batch,
+    summarize_article,
+    score_news_impact
+)
 from email_sender import send_email
 from llm_monitor import print_summary, log_to_file
 
@@ -10,34 +14,40 @@ def run_news_agent():
 
     articles = fetch_ai_news()
 
+    if not articles:
+        print("No articles fetched")
+        return
+
+    # Extract titles
+    titles = [a["title"] for a in articles]
+
+    # Step 1 — Batch classification
+    relevant_indices = classify_india_ai_batch(titles)
+
+    relevant_articles = [articles[i] for i in relevant_indices]
+
     scored_articles = []
 
-    # Step 1 — Filter + Score
-    for art in articles:
+    # Step 2 — Impact scoring
+    for art in relevant_articles:
 
-        title = art["title"]
-
-        if not is_india_ai_related(title):
-            continue
-
-        score = score_news_impact(title)
-
+        score = score_news_impact(art["title"])
         art["impact_score"] = score
 
         scored_articles.append(art)
 
-    # Step 2 — Rank by impact
+    # Step 3 — Rank by importance
     scored_articles = sorted(
         scored_articles,
         key=lambda x: x["impact_score"],
         reverse=True
     )
 
-    # Step 3 — Select top 5
     top_articles = scored_articles[:5]
 
     report = ""
 
+    # Step 4 — Summarize
     for art in top_articles:
 
         summary = summarize_article(art["title"])
@@ -59,8 +69,5 @@ def run_news_agent():
 
     print("Top AI News Email Sent Successfully")
 
-    # Print token usage summary
     print_summary()
-
-    # Save usage to CSV
     log_to_file()
