@@ -10,9 +10,9 @@ INPUT_COST_PER_1K = 0.00015
 OUTPUT_COST_PER_1K = 0.00060
 
 
-def log_usage(usage, label="LLM Call"):
+def log_usage(usage, label=None):
     """
-    Logs token usage for a single LLM call.
+    Track token usage silently without printing per-call logs.
     """
 
     global TOTAL_PROMPT_TOKENS
@@ -27,15 +27,10 @@ def log_usage(usage, label="LLM Call"):
     TOTAL_COMPLETION_TOKENS += completion_tokens
     TOTAL_TOKENS += total_tokens
 
-    print(f"\n[{label}]")
-    print("Prompt tokens:", prompt_tokens)
-    print("Completion tokens:", completion_tokens)
-    print("Total tokens:", total_tokens)
-
 
 def print_summary():
     """
-    Prints total token usage for the run.
+    Print final usage summary only.
     """
 
     input_cost = (TOTAL_PROMPT_TOKENS / 1000) * INPUT_COST_PER_1K
@@ -54,7 +49,7 @@ def print_summary():
 
 def log_to_file():
     """
-    Optionally store usage history in a CSV file.
+    Save usage to CSV log.
     """
 
     date = datetime.date.today()
