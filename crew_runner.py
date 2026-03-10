@@ -6,6 +6,8 @@ from llm_monitor import print_summary, log_to_file
 
 def run_news_agent():
 
+    print("Starting AI News Agent...")
+
     articles = fetch_ai_news()
 
     scored_articles = []
