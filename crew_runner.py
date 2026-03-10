@@ -88,6 +88,7 @@ def run_news_agent():
     .headline {{
         font-size: 18px;
         font-weight: bold;
+        color: #1f77b4;
     }}
 
     .score {{
