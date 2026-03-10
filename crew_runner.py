@@ -1,6 +1,7 @@
 from tools import fetch_ai_news
 from summarize import summarize_article, is_india_ai_related, score_news_impact
 from email_sender import send_email
+from llm_monitor import print_summary, log_to_file
 
 
 def run_news_agent():
@@ -9,7 +10,7 @@ def run_news_agent():
 
     scored_articles = []
 
-    # Step 1 — Filter and score
+    # Step 1 — Filter + Score
     for art in articles:
 
         title = art["title"]
@@ -23,7 +24,7 @@ def run_news_agent():
 
         scored_articles.append(art)
 
-    # Step 2 — Rank by importance
+    # Step 2 — Rank by impact
     scored_articles = sorted(
         scored_articles,
         key=lambda x: x["impact_score"],
@@ -55,3 +56,9 @@ def run_news_agent():
     send_email(report)
 
     print("Top AI News Email Sent Successfully")
+
+    # Print token usage summary
+    print_summary()
+
+    # Save usage to CSV
+    log_to_file()

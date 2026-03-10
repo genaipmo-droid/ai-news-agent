@@ -1,5 +1,6 @@
 from openai import OpenAI
 import os
+from llm_monitor import log_usage
 
 # Initialize OpenAI client
 api_key = os.getenv("OPENAI_API_KEY")
@@ -16,8 +17,7 @@ client = OpenAI(
 
 def is_india_ai_related(text):
     """
-    Contextual classifier to determine if a headline is about
-    Artificial Intelligence developments related to India.
+    Contextual classifier to determine if headline is AI-related AND India-related.
     """
 
     prompt = f"""
@@ -35,7 +35,6 @@ NO
 Return YES only if BOTH conditions are true:
 
 1) The topic clearly relates to Artificial Intelligence such as:
-- AI
 - artificial intelligence
 - machine learning
 - deep learning
@@ -75,6 +74,8 @@ Answer:
         temperature=0
     )
 
+    log_usage(response.usage, "AI + India Classifier")
+
     answer = response.choices[0].message.content.strip().upper()
 
     return answer == "YES"
@@ -83,7 +84,7 @@ Answer:
 
 def score_news_impact(text):
     """
-    Score the importance of an AI news development related to India.
+    Score importance of AI development in India.
     """
 
     prompt = f"""
@@ -112,6 +113,8 @@ Score:
         messages=[{"role":"user","content":prompt}],
         temperature=0
     )
+
+    log_usage(response.usage, "Impact Scoring")
 
     score = response.choices[0].message.content.strip()
 
@@ -147,7 +150,7 @@ Rules:
 - Exactly 3 bullet points.
 - Each bullet must start with "•".
 - Bullet points must expand the headline.
-- Impact must explain the significance for India's AI landscape.
+- Impact must explain significance for India's AI ecosystem.
 
 News:
 {text}
@@ -159,9 +162,11 @@ News:
         temperature=0.2
     )
 
+    log_usage(response.usage, "Summarization")
+
     output = response.choices[0].message.content
 
-    # Make bullets display correctly in HTML email
+    # HTML formatting for email
     output = output.replace("•", "<br>• ")
 
     return output
