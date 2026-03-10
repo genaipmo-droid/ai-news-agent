@@ -1,21 +1,28 @@
 import smtplib
-from email.mime.text import MIMEText
 import os
+from email.mime.text import MIMEText
 
 
 def send_email(content):
 
     msg = MIMEText(content, "html")
 
-    msg["Subject"] = "Daily AI News Digest - India"
+    msg["Subject"] = "AI Developments in India – Daily Brief"
     msg["From"] = os.getenv("EMAIL_USER")
     msg["To"] = os.getenv("EMAIL_TO")
 
-    with smtplib.SMTP_SSL("smtp.gmail.com",465) as server:
+    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server.starttls()
 
-        server.login(
-            os.getenv("EMAIL_USER"),
-            os.getenv("EMAIL_PASS")
-        )
+    server.login(
+        os.getenv("EMAIL_USER"),
+        os.getenv("EMAIL_PASS")
+    )
 
-        server.send_message(msg)
+    server.sendmail(
+        os.getenv("EMAIL_USER"),
+        os.getenv("EMAIL_TO"),
+        msg.as_string()
+    )
+
+    server.quit()
