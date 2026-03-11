@@ -12,7 +12,27 @@ client = OpenAI(
 @traceable
 def classify_india_ai_batch(headlines):
 
-    prompt = f"..."
+    numbered_headlines = "\n".join(
+        [f"{i+1}. {h}" for i, h in enumerate(headlines)]
+    )
+
+    prompt = f"""
+You are a strict news classifier.
+
+From the list below, identify headlines describing
+Artificial Intelligence developments specifically related to India.
+
+Return ONLY the numbers of relevant headlines separated by commas.
+
+Example:
+1,3,5
+
+Headlines:
+
+{numbered_headlines}
+
+Relevant headline numbers:
+"""
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -22,7 +42,15 @@ def classify_india_ai_batch(headlines):
 
     log_usage(response.usage)
 
-    return response.choices[0].message.content.strip()
+    answer = response.choices[0].message.content.strip()
+
+    # Convert LLM output to integer indices
+    try:
+        numbers = answer.replace(" ", "").split(",")
+        indices = [int(n) - 1 for n in numbers if n.isdigit()]
+        return indices
+    except Exception:
+        return []
 
 
 @traceable
