@@ -12,11 +12,10 @@ client = OpenAI(
 )
 
 
-@traceable
 def classify_india_ai_batch(headlines):
     """
     Classify multiple headlines in one LLM call.
-    Returns list of indices of relevant headlines.
+    Returns a list of integer indices.
     """
 
     numbered_headlines = "\n".join(
@@ -24,26 +23,16 @@ def classify_india_ai_batch(headlines):
     )
 
     prompt = f"""
-You are a strict news classifier.
+You are a strict classifier.
 
-Identify headlines describing Artificial Intelligence developments
-specifically related to India.
+Identify which headlines describe AI developments related to India.
 
-Return the result in JSON format ONLY:
+Return ONLY JSON in this format:
 
-{{
-  "relevant": [indices]
-}}
+{{ "relevant": [indices] }}
 
 Example:
-{{
-  "relevant": [0,2,5]
-}}
-
-Rules:
-1. The news must clearly relate to AI / machine learning / generative AI / LLMs
-2. The development must specifically involve India
-3. Return only JSON, no explanations
+{{ "relevant": [0,2,5] }}
 
 Headlines:
 
@@ -60,10 +49,22 @@ Headlines:
 
     output = response.choices[0].message.content.strip()
 
+    print("Classifier raw output:", output)
+
     try:
         data = json.loads(output)
-        return data.get("relevant", [])
-    except Exception:
+        indices = data.get("relevant", [])
+
+        # Ensure indices are valid integers
+        indices = [
+            int(i) for i in indices
+            if isinstance(i, int) or str(i).isdigit()
+        ]
+
+        return indices
+
+    except Exception as e:
+        print("Classifier JSON parsing failed:", e)
         return []
 
 
@@ -74,19 +75,17 @@ def score_news_impact(text):
     """
 
     prompt = f"""
-You are evaluating the importance of an AI development related to India.
+Score the importance of this AI news headline related to India.
 
-Score the impact from 1 to 10.
+Return ONLY a number between 1 and 10.
 
-Score guide:
+Guidelines:
 
-10 = Major national AI policy, infrastructure, or breakthrough
-8-9 = Large investments, major AI company expansion, major research
-6-7 = Significant AI startup launches or partnerships
-4-5 = Moderate AI developments
-1-3 = Minor updates
-
-Return ONLY the number.
+10 = Major national AI initiative or breakthrough
+8-9 = Major company expansion or funding
+6-7 = Significant startup or product launch
+4-5 = Moderate development
+1-3 = Minor update
 
 Headline:
 {text}
@@ -94,14 +93,16 @@ Headline:
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role":"user","content":prompt}],
+        messages=[{"role": "user", "content": prompt}],
         temperature=0
     )
 
     log_usage(response.usage)
 
+    output = response.choices[0].message.content.strip()
+
     try:
-        return int(response.choices[0].message.content.strip())
+        return int(output)
     except:
         return 1
 
@@ -109,37 +110,31 @@ Headline:
 @traceable
 def summarize_article(text):
     """
-    Generate structured executive summary for AI news.
+    Generate structured executive summary.
     """
 
     prompt = f"""
-You are writing an executive briefing on AI developments in India.
+Write a short executive summary of this AI news headline related to India.
 
-Summarize the news using EXACTLY this structure:
+Use EXACT format:
 
-Headline: One clear sentence summarizing the news.
+Headline: one sentence summary
 
 Key Points:
-• bullet point
-• bullet point
-• bullet point
+• bullet
+• bullet
+• bullet
 
 Impact:
-One sentence explaining why this development matters for India's AI ecosystem.
+one sentence explaining significance for India's AI ecosystem.
 
-Rules:
-- Headline must be ONE sentence.
-- Exactly 3 bullet points.
-- Each bullet must start with "•".
-- Impact must explain significance for India's AI ecosystem.
-
-News:
+Headline:
 {text}
 """
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role":"user","content":prompt}],
+        messages=[{"role": "user", "content": prompt}],
         temperature=0.2
     )
 
@@ -147,7 +142,7 @@ News:
 
     output = response.choices[0].message.content
 
-    # Improve formatting for HTML email
+    # Convert bullet formatting for HTML email
     output = output.replace("•", "<br>• ")
 
     return output
