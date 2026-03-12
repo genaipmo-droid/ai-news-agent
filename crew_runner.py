@@ -24,6 +24,12 @@ def run_news_agent():
     # Step 1 — Batch classification
     relevant_indices = classify_india_ai_batch(titles)
 
+# Safety check to prevent index errors
+    relevant_indices = [
+        i for i in relevant_indices
+        if isinstance(i, int) and i < len(articles)
+]
+
     relevant_articles = [articles[i] for i in relevant_indices]
 
     scored_articles = []
