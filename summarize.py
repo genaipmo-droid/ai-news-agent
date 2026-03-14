@@ -3,6 +3,20 @@ import json
 from openai import OpenAI
 from llm_monitor import log_usage
 from langsmith import traceable
+import re
+
+
+def parse_classifier_output(output):
+    """
+    Safely parse classifier JSON output and remove markdown code blocks.
+    """
+    try:
+        cleaned = re.sub(r"```json|```", "", output).strip()
+        data = json.loads(cleaned)
+        return data.get("relevant", [])
+    except Exception as e:
+        print("Classifier JSON parsing failed:", e)
+        return []
 
 
 # Initialize OpenAI client
@@ -27,12 +41,14 @@ You are a strict classifier.
 
 Identify which headlines describe AI developments related to India.
 
-Return ONLY JSON in this format:
+Return ONLY raw JSON in this format:
 
 {{ "relevant": [indices] }}
 
 Example:
 {{ "relevant": [0,2,5] }}
+
+Do NOT include markdown or ``` blocks.
 
 Headlines:
 
@@ -51,21 +67,16 @@ Headlines:
 
     print("Classifier raw output:", output)
 
-    try:
-        data = json.loads(output)
-        indices = data.get("relevant", [])
+    # ✅ Safe JSON parsing
+    indices = parse_classifier_output(output)
 
-        # Ensure indices are valid integers
-        indices = [
-            int(i) for i in indices
-            if isinstance(i, int) or str(i).isdigit()
-        ]
+    # Ensure indices are valid integers
+    indices = [
+        int(i) for i in indices
+        if isinstance(i, int) or str(i).isdigit()
+    ]
 
-        return indices
-
-    except Exception as e:
-        print("Classifier JSON parsing failed:", e)
-        return []
+    return indices
 
 
 @traceable
