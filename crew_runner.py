@@ -6,7 +6,7 @@ from summarize import (
 )
 from email_sender import send_email
 from llm_monitor import print_summary, log_to_file
-from datetime import date
+from datetime import date, datetime
 
 
 def run_news_agent():
@@ -137,6 +137,12 @@ def run_news_agent():
         border-left: 6px solid #1f77b4;
     }}
 
+    .published-date {{
+        font-size:12px;
+        color:#777;
+        margin-top:5px;
+    }}
+
     .source {{
         margin-top:10px;
         font-size:13px;
@@ -165,6 +171,18 @@ def run_news_agent():
         summary = summary.replace("Key Points:", "<br><b>Key Points:</b>")
         summary = summary.replace("Impact:", "<br><b>Impact:</b><br>")
 
+        # Safely get article date
+        article_date = art.get("date", "")
+
+        # Format date nicely if possible
+        try:
+            article_date = datetime.strptime(
+                article_date,
+                "%a, %d %b %Y %H:%M:%S %Z"
+            ).strftime("%d %b %Y")
+        except:
+            pass
+
         report += f"""
 
         <div class="news-card">
@@ -173,9 +191,15 @@ def run_news_agent():
         <a href="{art['link']}" style="color:#1f77b4;text-decoration:none;">
         {art['title']}
         </a>
+
         <span style="float:right;background:#ffcc00;padding:4px 8px;border-radius:4px;font-weight:bold;">
         Impact {art['impact_score']}
         </span>
+
+        </div>
+
+        <div class="published-date">
+        Published: {article_date}
         </div>
 
         <div>
