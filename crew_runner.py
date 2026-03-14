@@ -2,7 +2,8 @@ from tools import fetch_ai_news
 from summarize import (
     classify_india_ai_batch,
     summarize_article,
-    score_news_impact
+    score_news_impact,
+    classify_ai_category
 )
 from email_sender import send_email
 from llm_monitor import print_summary, log_to_file
@@ -52,7 +53,10 @@ def run_news_agent():
     for art in relevant_articles:
 
         score = score_news_impact(art["title"])
+        category = classify_ai_category(art["title"])
+
         art["impact_score"] = score
+        art["category"] = category
 
         scored_articles.append(art)
 
@@ -200,8 +204,12 @@ def run_news_agent():
 
         <div class="published-date">
         Published: {article_date}
+        
         </div>
-
+        <div style="font-size:12px;color:#444;margin-top:4px;font-weight:bold;">
+        Category: {art['category']}
+<       /div>
+        
         <div>
         {summary}
         </div>

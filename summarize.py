@@ -157,3 +157,35 @@ Headline:
     output = output.replace("•", "<br>• ")
 
     return output
+
+@traceable
+def classify_ai_category(text):
+    """
+    Categorize AI news related to India.
+    """
+
+    prompt = f"""
+Classify this AI news headline into ONE category.
+
+Categories:
+1. Government AI Initiatives
+2. AI Infrastructure Investments
+3. Startup / Funding
+4. Big Tech AI Developments
+5. Research / Innovation
+
+Return ONLY the category name.
+
+Headline:
+{text}
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0
+    )
+
+    log_usage(response.usage)
+
+    return response.choices[0].message.content.strip()
