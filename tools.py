@@ -4,21 +4,36 @@ from datetime import datetime
 
 def fetch_ai_news():
 
-    url = "https://news.google.com/rss/search?q=AI+India&hl=en-IN&gl=IN&ceid=IN:en"
+    rss_url = "https://news.google.com/rss/search?q=artificial+intelligence+India&hl=en-IN&gl=IN&ceid=IN:en"
 
-    feed = feedparser.parse(url)
+    print("Fetching RSS:", rss_url)
+
+    feed = feedparser.parse(rss_url)
+
+    print("RSS entries found:", len(feed.entries))
 
     articles = []
 
     for entry in feed.entries:
 
-        date = datetime(*entry.published_parsed[:6]).strftime("%Y-%m-%d")
+        try:
+            title = entry.title
+            link = entry.link
 
-        articles.append({
-            "title": entry.title,
-            "link": entry.link,
-            "publisher": entry.source.title,
-            "date": date
-        })
+            published = entry.published if "published" in entry else ""
+
+            publisher = entry.source.title if "source" in entry else "Unknown"
+
+            articles.append({
+                "title": title,
+                "link": link,
+                "publisher": publisher,
+                "date": published
+            })
+
+        except Exception as e:
+            print("Error parsing entry:", e)
+
+    print("Articles parsed:", len(articles))
 
     return articles
