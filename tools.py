@@ -1,38 +1,37 @@
 import feedparser
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 
 def fetch_ai_news():
 
-    rss_url = "https://news.google.com/rss/search?q=artificial+intelligence+India&hl=en-IN&gl=IN&ceid=IN:en"
+    url = "https://news.google.com/rss/search?q=artificial+intelligence+India&hl=en-IN&gl=IN&ceid=IN:en"
 
-    print("Fetching RSS:", rss_url)
-
-    feed = feedparser.parse(rss_url)
-
-    print("RSS entries found:", len(feed.entries))
+    feed = feedparser.parse(url)
 
     articles = []
+
+    now = datetime.now(timezone.utc)
+    seven_days_ago = now - timedelta(days=7)
 
     for entry in feed.entries:
 
         try:
-            title = entry.title
-            link = entry.link
+            published = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+        except:
+            continue
 
-            published = entry.published if "published" in entry else ""
+        # Keep only last 7 days news
+        if published < seven_days_ago:
+            continue
 
-            publisher = entry.source.title if "source" in entry else "Unknown"
+        articles.append({
 
-            articles.append({
-                "title": title,
-                "link": link,
-                "publisher": publisher,
-                "date": published
-            })
+            "title": entry.title,
+            "link": entry.link,
+            "publisher": entry.source.title if "source" in entry else "Unknown",
+            "date": published.strftime("%d %b %Y")
 
-        except Exception as e:
-            print("Error parsing entry:", e)
+        })
 
     print("Articles parsed:", len(articles))
 
