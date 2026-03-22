@@ -2,15 +2,14 @@ name: AI News Agent
 
 on:
   schedule:
-    - cron: "30 2 * * *"   # 08:00 AM IST (02:30 UTC)
-  workflow_dispatch:       # Allows manual run from GitHub UI
+    - cron: "30 2 */2 * *"   # Every 2 days at 08:00 AM IST (02:30 UTC)
+  workflow_dispatch:
 
 jobs:
   run-agent:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v3
 
