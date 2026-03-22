@@ -3,3 +3,5 @@ openai
 feedparser
 python-dotenv
 langsmith
+langchain
+langchain-openai
