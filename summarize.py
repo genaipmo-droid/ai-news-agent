@@ -1,11 +1,27 @@
 import os
 import json
-from openai import OpenAI
-from llm_monitor import log_usage
-from langsmith import traceable
 import re
+from langchain_openai import ChatOpenAI
+from langsmith import traceable
 
 
+# -------------------------------
+# LLM Initialization (LangChain)
+# -------------------------------
+llm_strict = ChatOpenAI(
+    model="gpt-4o-mini",
+    temperature=0
+)
+
+llm_creative = ChatOpenAI(
+    model="gpt-4o-mini",
+    temperature=0.2
+)
+
+
+# -------------------------------
+# Utility: Safe JSON Parsing
+# -------------------------------
 def parse_classifier_output(output):
     """
     Safely parse classifier JSON output and remove markdown code blocks.
@@ -19,13 +35,10 @@ def parse_classifier_output(output):
         return []
 
 
-# Initialize OpenAI client
-client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY"),
-    base_url=os.getenv("OPENAI_BASE_URL")
-)
-
-
+# -------------------------------
+# Batch Classification
+# -------------------------------
+@traceable(name="Classify India AI News Batch")
 def classify_india_ai_batch(headlines):
     """
     Classify multiple headlines in one LLM call.
@@ -55,22 +68,13 @@ Headlines:
 {numbered_headlines}
 """
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0
-    )
-
-    log_usage(response.usage)
-
-    output = response.choices[0].message.content.strip()
+    response = llm_strict.invoke(prompt)
+    output = response.content.strip()
 
     print("Classifier raw output:", output)
 
-    # ✅ Safe JSON parsing
     indices = parse_classifier_output(output)
 
-    # Ensure indices are valid integers
     indices = [
         int(i) for i in indices
         if isinstance(i, int) or str(i).isdigit()
@@ -79,7 +83,10 @@ Headlines:
     return indices
 
 
-@traceable
+# -------------------------------
+# Impact Scoring
+# -------------------------------
+@traceable(name="Score News Impact")
 def score_news_impact(text):
     """
     Score importance of AI development in India (1–10).
@@ -102,15 +109,8 @@ Headline:
 {text}
 """
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0
-    )
-
-    log_usage(response.usage)
-
-    output = response.choices[0].message.content.strip()
+    response = llm_strict.invoke(prompt)
+    output = response.content.strip()
 
     try:
         return int(output)
@@ -118,7 +118,10 @@ Headline:
         return 1
 
 
-@traceable
+# -------------------------------
+# Article Summarization
+# -------------------------------
+@traceable(name="Summarize Article")
 def summarize_article(text):
     """
     Generate structured executive summary.
@@ -143,22 +146,19 @@ Headline:
 {text}
 """
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.2
-    )
-
-    log_usage(response.usage)
-
-    output = response.choices[0].message.content
+    response = llm_creative.invoke(prompt)
+    output = response.content
 
     # Convert bullet formatting for HTML email
     output = output.replace("•", "<br>• ")
 
     return output
 
-@traceable
+
+# -------------------------------
+# Category Classification
+# -------------------------------
+@traceable(name="Classify AI Category")
 def classify_ai_category(text):
     """
     Categorize AI news related to India.
@@ -180,12 +180,5 @@ Headline:
 {text}
 """
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0
-    )
-
-    log_usage(response.usage)
-
-    return response.choices[0].message.content.strip()
+    response = llm_strict.invoke(prompt)
+    return response.content.strip()
