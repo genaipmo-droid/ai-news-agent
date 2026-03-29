@@ -208,7 +208,7 @@ def run_news_agent():
         </div>
         <div style="font-size:12px;color:#444;margin-top:4px;font-weight:bold;">
         Category: {art['category']}
-<       /div>
+        </div>
         
         <div>
         {summary}
